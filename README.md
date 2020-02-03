@@ -15,7 +15,7 @@ As a bonus, the hole for the method name will not allow line breaks. These are o
 
 ## Installing
 
-    pip3 install git+https://github.com/UCL-INGI/INGInious-problems-mcode-fill
+    pip3 install git+https://github.com/UCL-INGI/INGInious-problems-code-fill
 
 ## Activating
 
