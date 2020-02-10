@@ -31,6 +31,8 @@ CodeMirror.defineInitHook( (cm) => {
       var mark = cm.markText(from, to, {
         className: 'read-only',
         readOnly: true,
+        atomic: true,
+        clearWhenEmpty: false,
         inclusiveLeft: i == 0,
         inclusiveRight: i == texts.length - 1,
       })
