@@ -46,9 +46,8 @@ class CodeFillProblem(CodeProblem):
 class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
 
     """ A displayable fill-in-the-blanks code problem """
-    def __init__(self, task, problemid, content, translations=None):
-        super(DisplayableCodeFillProblem, self).__init__(task, problemid, content, translations)
-
+    def __init__(self, task, problemid, content):
+        super(DisplayableCodeFillProblem, self).__init__(task, problemid, content)
 
     @classmethod
     def get_type_name(self, gettext):
@@ -59,18 +58,16 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
         """ Get the renderer for this class problem """
         return template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, "templates"), False)
 
-    #@classmethod
-    #def show_editbox(self, template_helper, key):
-    #    return DisplayableCodeFillProblem.get_renderer(template_helper).code-fill(key)
     def show_input(self, template_helper, language, seed):
         """ Show BasicCodeProblem and derivatives """
-        header = ParsableText(self.gettext(language,self._header), "rst",
-                              translation=self._translations.get(language, gettext.NullTranslations()))
-        return str(DisplayableCodeFillProblem.get_renderer(template_helper).tasks.code_fill(self.get_id(), header, 8, 0, self._language, self._optional, self._default))
+        header = ParsableText(self.gettext(language, self._header), "rst",
+                              translation=self.get_translation_obj(language))
+        return str(DisplayableCodeFillProblem.get_renderer(template_helper)
+                   .tasks.code_fill(self.get_id(), header, 8, 0, self._language, self._optional, self._default))
 
-    @classmethod
-    def show_editbox(cls, template_helper, key, language):
-        return ""
+    #@classmethod
+    #def show_editbox(cls, template_helper, key, language):
+    #    return DisplayableCodeFillProblem.get_renderer(template_helper).course_admin.subproblems.code(key, False)
 
     def adapt_input_for_backend(self, input_data):
         """ Adapt the input from web.py for the inginious.backend """
