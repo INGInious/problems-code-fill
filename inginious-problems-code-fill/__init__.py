@@ -52,8 +52,8 @@ class CodeFillProblem(CodeProblem):
 class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
 
     """ A displayable fill-in-the-blanks code problem """
-    def __init__(self, task, problemid, content):
-        super(DisplayableCodeFillProblem, self).__init__(task, problemid, content)
+    def __init__(self, problemid, content, translations, taskfs):
+        super(DisplayableCodeFillProblem, self).__init__(problemid, content, translations, taskfs)
 
     @classmethod
     def get_type_name(self, gettext):
