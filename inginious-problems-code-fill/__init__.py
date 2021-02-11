@@ -14,8 +14,26 @@ from inginious.common.tasks_problems import CodeProblem
 from inginious.frontend.task_problems import DisplayableCodeProblem
 from inginious.frontend.parsable_text import ParsableText
 
-
 __version__ = "0.1"
+
+PATH_TO_PLUGIN = os.path.abspath(os.path.dirname(__file__))
+PATH_TO_TEMPLATES = os.path.join(PATH_TO_PLUGIN, "templates")
+
+
+class StaticMockPage(object):
+    # TODO: Replace by shared static middleware and let webserver serve the files
+    def GET(self, path):
+        if not os.path.abspath(PATH_TO_PLUGIN) in os.path.abspath(os.path.join(PATH_TO_PLUGIN, path)):
+            raise web.notfound()
+
+        try:
+            with open(os.path.join(PATH_TO_PLUGIN, "static", path), 'rb') as file:
+                return file.read()
+        except:
+            raise web.notfound()
+
+    def POST(self, path):
+        return self.GET(path)
 
 def normalize(s):
     return s.replace('\r\n', '\n').replace('\r', '\n')
@@ -24,8 +42,8 @@ class CodeFillProblem(CodeProblem):
     """
     Fill-in-the-blanks code problem
     """
-    def __init__(self, task, problem_id, content):
-        super().__init__(task, problem_id, content)
+    def __init__(self, problemid, content, translations, taskfs):
+        super().__init__(problemid, content, translations, taskfs)
         self._default = normalize(self._default)
 
     @classmethod
@@ -49,8 +67,8 @@ class CodeFillProblem(CodeProblem):
             return False
         return task_input[self.get_id()]["matches"]
 
-class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
 
+class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
     """ A displayable fill-in-the-blanks code problem """
     def __init__(self, problemid, content, translations, taskfs):
         super(DisplayableCodeFillProblem, self).__init__(problemid, content, translations, taskfs)
@@ -59,21 +77,14 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
     def get_type_name(self, gettext):
         return "code-fill"
 
-    @classmethod
-    def get_renderer(cls, template_helper):
-        """ Get the renderer for this class problem """
-        return template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, "templates"), False)
-
     def show_input(self, template_helper, language, seed):
         """ Show BasicCodeProblem and derivatives """
         header = ParsableText(self.gettext(language, self._header), "rst",
                               translation=self.get_translation_obj(language))
-        return str(DisplayableCodeFillProblem.get_renderer(template_helper)
-                   .tasks.code_fill(self.get_id(), header, 8, 0, self._language, self._optional, self._default))
+        return template_helper.render("tasks/code_fill.html", template_folder=PATH_TO_TEMPLATES,
+                                      inputId=self.get_id(), header=header, lines=8, maxChars=0,
+                                      language=self._language, optional=self._optional, default=self._default)
 
-    #@classmethod
-    #def show_editbox(cls, template_helper, key, language):
-    #    return DisplayableCodeFillProblem.get_renderer(template_helper).course_admin.subproblems.code(key, False)
 
     def adapt_input_for_backend(self, input_data):
         """ Adapt the input from web.py for the inginious.backend """
@@ -96,25 +107,6 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
                                       "matches": True, }
         return input_data
 
-
-
-
-PATH_TO_PLUGIN = os.path.abspath(os.path.dirname(__file__))
-
-class StaticMockPage(object):
-    # TODO: Replace by shared static middleware and let webserver serve the files
-    def GET(self, path):
-        if not os.path.abspath(PATH_TO_PLUGIN) in os.path.abspath(os.path.join(PATH_TO_PLUGIN, path)):
-            raise web.notfound()
-
-        try:
-            with open(os.path.join(PATH_TO_PLUGIN, "static", path), 'rb') as file:
-                return file.read()
-        except:
-            raise web.notfound()
-
-    def POST(self, path):
-        return self.GET(path)
 
 def init(plugin_manager, course_factory, client, plugin_config):
     # TODO: Replace by shared static middleware and let webserver serve the files
