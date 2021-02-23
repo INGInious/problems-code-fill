@@ -5,12 +5,11 @@
 
 import os
 import re
-import web
-import json
-import gettext
 import itertools
 
+from flask import send_from_directory
 from inginious.common.tasks_problems import CodeProblem
+from inginious.frontend.pages.utils import INGIniousPage
 from inginious.frontend.task_problems import DisplayableCodeProblem
 from inginious.frontend.parsable_text import ParsableText
 
@@ -20,17 +19,9 @@ PATH_TO_PLUGIN = os.path.abspath(os.path.dirname(__file__))
 PATH_TO_TEMPLATES = os.path.join(PATH_TO_PLUGIN, "templates")
 
 
-class StaticMockPage(object):
-    # TODO: Replace by shared static middleware and let webserver serve the files
+class StaticMockPage(INGIniousPage):
     def GET(self, path):
-        if not os.path.abspath(PATH_TO_PLUGIN) in os.path.abspath(os.path.join(PATH_TO_PLUGIN, path)):
-            raise web.notfound()
-
-        try:
-            with open(os.path.join(PATH_TO_PLUGIN, "static", path), 'rb') as file:
-                return file.read()
-        except:
-            raise web.notfound()
+        return send_from_directory(os.path.join(PATH_TO_PLUGIN, "static"), path)
 
     def POST(self, path):
         return self.GET(path)
@@ -110,7 +101,7 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
 
 def init(plugin_manager, course_factory, client, plugin_config):
     # TODO: Replace by shared static middleware and let webserver serve the files
-    plugin_manager.add_page('/plugins/code-fill/static/(.+)', StaticMockPage)
+    plugin_manager.add_page('/plugins/code-fill/static/<path:path>', StaticMockPage.as_view('codefillstaticpage'))
     plugin_manager.add_hook("css", lambda: "/plugins/code-fill/static/css/code-fill.css")
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/code-fill/static/js/code-fill.js")
     course_factory.get_task_factory().add_problem_type(DisplayableCodeFillProblem)
