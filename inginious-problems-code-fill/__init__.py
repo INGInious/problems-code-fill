@@ -13,7 +13,8 @@ from inginious.frontend.pages.utils import INGIniousPage
 from inginious.frontend.task_problems import DisplayableCodeProblem
 from inginious.frontend.parsable_text import ParsableText
 
-__version__ = "0.1"
+
+__version__ = "0.2"
 
 PATH_TO_PLUGIN = os.path.abspath(os.path.dirname(__file__))
 PATH_TO_TEMPLATES = os.path.join(PATH_TO_PLUGIN, "templates")
@@ -34,7 +35,7 @@ class CodeFillProblem(CodeProblem):
     Fill-in-the-blanks code problem
     """
     def __init__(self, problemid, content, translations, taskfs):
-        super().__init__(problemid, content, translations, taskfs)
+        CodeProblem.__init__(self, problemid, content, translations, taskfs)
         self._default = normalize(self._default)
 
     @classmethod
@@ -51,6 +52,8 @@ class CodeFillProblem(CodeProblem):
 
     def getFillRegex(self):
         regex = r'({})'.format(re.sub(r'\\{%.+?%\\}', r')\{%(.*?)%\}(', re.escape(self._default), flags=re.DOTALL))
+        #print("default", self._default)
+        #print("regex", regex)
         return re.compile(regex, flags=re.DOTALL)
 
     def input_is_consistent(self, task_input, default_allowed_extension, default_max_size):
@@ -60,22 +63,23 @@ class CodeFillProblem(CodeProblem):
 
 
 class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
+
     """ A displayable fill-in-the-blanks code problem """
     def __init__(self, problemid, content, translations, taskfs):
-        super(DisplayableCodeFillProblem, self).__init__(problemid, content, translations, taskfs)
+        CodeFillProblem.__init__(self, problemid, content, translations, taskfs)
 
     @classmethod
     def get_type_name(self, gettext):
         return "code-fill"
 
     def show_input(self, template_helper, language, seed):
-        """ Show BasicCodeProblem and derivatives """
+        """ Show CodeFillProblem """
         header = ParsableText(self.gettext(language, self._header), "rst",
                               translation=self.get_translation_obj(language))
-        return template_helper.render("tasks/code_fill.html", template_folder=PATH_TO_TEMPLATES,
-                                      inputId=self.get_id(), header=header, lines=8, maxChars=0,
-                                      language=self._language, optional=self._optional, default=self._default)
-
+        return template_helper.render("tasks/code_fill.html",
+                template_folder=PATH_TO_TEMPLATES, inputId=self.get_id(),
+                header=header, lines=8, maxChars=0, language=self._language,
+                optional=self._optional, template=self._default)
 
     def adapt_input_for_backend(self, input_data):
         """ Adapt the input from web.py for the inginious.backend """
@@ -84,6 +88,8 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
 
         text = normalize(input_data[self.get_id()])
         match = self.getFillRegex().fullmatch(text)
+        #print("text", text)
+        #print("match", match, match.groups())
         if not match:
             input_data[self.get_id()] = { "input": text,
                                           "template": self._default,
