@@ -51,8 +51,9 @@ class CodeFillProblem(CodeProblem):
         return dict
 
     def getFillRegex(self):
-        regex = r'({})'.format(re.sub(r'\\{%.+?%\\}', r')\{%(.*?)%\}(', re.escape(self._default), flags=re.DOTALL))
+        regex = r'({})'.format(re.sub(r'\\{\\?%.+?\\?%\\}', r')\{%(.*?)%\}(', re.escape(self._default), flags=re.DOTALL))
         #print("default", self._default)
+        #print("escaped default", re.escape(self._default))
         #print("regex", regex)
         return re.compile(regex, flags=re.DOTALL)
 
@@ -82,7 +83,7 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
                 optional=self._optional, template=self._default)
 
     def adapt_input_for_backend(self, input_data):
-        """ Adapt the input from web.py for the inginious.backend """
+        """ Adapt the web input for the backend """
         if not str(self.get_id()) in input_data:
             return input_data
 
@@ -93,15 +94,15 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
         if not match:
             input_data[self.get_id()] = { "input": text,
                                           "template": self._default,
-                                          "matches": False, }
-            return input_data
-
-        template = "".join(t.format(s) for (s, t) in zip(match.groups(), itertools.cycle(("{}", "{{%{}%}}"))))
-        input_data[self.get_id()] = { "input": text,
-                                      "template": self._default,
-                                      "code": ''.join(match.groups()),
-                                      "regions": match.groups()[1::2],
-                                      "matches": True, }
+                                          "matches": False,
+                                        }
+        else:
+            input_data[self.get_id()] = { "input": text,
+                                          "template": self._default,
+                                          "code": ''.join(match.groups()),
+                                          "regions": match.groups()[1::2],
+                                          "matches": True,
+                                        }
         return input_data
 
 
