@@ -80,7 +80,7 @@ class DisplayableCodeFillProblem(CodeFillProblem, DisplayableCodeProblem):
         return template_helper.render("tasks/code_fill.html",
                 template_folder=PATH_TO_TEMPLATES, inputId=self.get_id(),
                 header=header, lines=8, maxChars=0, language=self._language,
-                optional=self._optional, template=self._default)
+                optional=self._optional, default=self._default)
 
     def adapt_input_for_backend(self, input_data):
         """ Adapt the web input for the backend """
